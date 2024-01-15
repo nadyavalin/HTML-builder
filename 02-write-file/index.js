@@ -30,7 +30,7 @@ const writeToFile = (text) => {
 };
 
 rl.on('SIGINT', () => {
-  console.log('It was a great job!');
+  console.log('\nIt was a great job!');
   rl.close();
 });
 
