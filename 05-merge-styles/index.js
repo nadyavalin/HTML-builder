@@ -24,6 +24,6 @@ fs.readdir(stylesFolder, (err, files) => {
       console.error('Error writing bundle file:', err);
       return;
     }
-    console.log('Bundle file created successfully!');
+    console.log('Bundle file has been created successfully!');
   });
 });
