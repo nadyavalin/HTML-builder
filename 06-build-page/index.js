@@ -50,7 +50,7 @@ fs.readFile(templatePath, 'utf8', (readFileErr, templateContent) => {
       );
     });
   }
-  console.log('index.html has been created in project-dist folder');
+  console.log('index.html has been created in project-dist folder!');
 });
 
 // Создание файла style.css
@@ -74,10 +74,10 @@ fs.readdir(stylesFolder, (err, files) => {
 
   fs.writeFile(path.join(distFolder, mergedStyles), bundleContent, (err) => {
     if (err) {
-      console.error('Error writing bundle file:', err);
+      console.error('Error writing style.css file:', err);
       return;
     }
-    console.log('style.css file has been created successfully!');
+    console.log('style.css has been created in project-dist folder!');
   });
 });
 
@@ -110,9 +110,12 @@ async function copyDir() {
   try {
     await mkdir(destinationPath, { recursive: true });
     await copyFileOrDirectory(sourcePath, destinationPath);
-    console.log('Directory copied successfully.');
+    console.log('assets folder has been copied in project-dist folder!');
   } catch (error) {
-    console.error('An error occurred while copying the directory:', error);
+    console.error(
+      'An error occurred while copying the directory assets:',
+      error,
+    );
   }
 }
 
