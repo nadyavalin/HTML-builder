@@ -8,7 +8,7 @@ fs.mkdir(projectDistFolderPath, { recursive: true }, (err) => {
   if (err) {
     console.error('Error creating project-dist folder:', err);
   }
-  console.log('Project-dist folder has been created!');
+  console.log('project-dist folder has been created!');
 });
 
 // Создание index.html в папке project-dist
@@ -51,4 +51,32 @@ fs.readFile(templatePath, 'utf8', (readFileErr, templateContent) => {
     });
   }
   console.log('index.html has been created in project-dist folder');
+});
+
+// Создание файла style.css
+const stylesFolder = './06-build-page/styles';
+const distFolder = './06-build-page/project-dist';
+const mergedStyles = 'style.css';
+
+fs.readdir(stylesFolder, (err, files) => {
+  if (err) {
+    console.error('Error reading styles folder:', err);
+    return;
+  }
+
+  const styleFiles = files.filter((file) => path.extname(file) === '.css');
+
+  let bundleContent = '';
+  styleFiles.forEach((file) => {
+    const content = fs.readFileSync(path.join(stylesFolder, file), 'utf8');
+    bundleContent += content + '\n';
+  });
+
+  fs.writeFile(path.join(distFolder, mergedStyles), bundleContent, (err) => {
+    if (err) {
+      console.error('Error writing bundle file:', err);
+      return;
+    }
+    console.log('style.css file has been created successfully!');
+  });
 });
