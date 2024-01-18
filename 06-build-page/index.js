@@ -1,121 +1,107 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
 // Создание папки project-dist
 const projectDistFolderPath = './06-build-page/project-dist';
 
-fs.mkdir(projectDistFolderPath, { recursive: true }, (err) => {
-  if (err) {
+async function createProjectDistFolder() {
+  try {
+    await fs.mkdir(projectDistFolderPath, { recursive: true });
+    console.log('project-dist folder has been created!');
+  } catch (err) {
     console.error('Error creating project-dist folder:', err);
-  }
-  console.log('project-dist folder has been created!');
-});
-
-// Создание index.html в папке project-dist
-const templatePath = './06-build-page/template.html';
-fs.readFile(templatePath, 'utf8', (readFileErr, templateContent) => {
-  if (readFileErr) {
-    console.error('Error reading template file:', readFileErr);
-    return;
-  }
-  const templateTags = templateContent.match(/{{\w+}}/g);
-  if (templateTags) {
-    templateTags.forEach((tag) => {
-      const componentName = tag.replace(/{{|}}/g, '');
-      const componentPath = path.join(
-        './06-build-page/components',
-        componentName + '.html',
-      );
-      fs.readFile(
-        componentPath,
-        'utf8',
-        (readComponentErr, componentContent) => {
-          if (readComponentErr) {
-            console.error('Error reading component file:', readComponentErr);
-            return;
-          }
-          templateContent = templateContent.replace(
-            new RegExp(tag, 'g'),
-            componentContent,
-          );
-
-          const indexPath = path.join(projectDistFolderPath, 'index.html');
-          fs.writeFile(indexPath, templateContent, 'utf8', (writeFileErr) => {
-            if (writeFileErr) {
-              console.error('Error writing to index.html:', writeFileErr);
-              return;
-            }
-          });
-        },
-      );
-    });
-  }
-  console.log('index.html has been created in project-dist folder!');
-});
-
-// Создание файла style.css
-const stylesFolder = './06-build-page/styles';
-const distFolder = './06-build-page/project-dist';
-const mergedStyles = 'style.css';
-
-fs.readdir(stylesFolder, (err, files) => {
-  if (err) {
-    console.error('Error reading styles folder:', err);
-    return;
-  }
-
-  const styleFiles = files.filter((file) => path.extname(file) === '.css');
-
-  let bundleContent = '';
-  styleFiles.forEach((file) => {
-    const content = fs.readFileSync(path.join(stylesFolder, file), 'utf8');
-    bundleContent += content + '\n';
-  });
-
-  fs.writeFile(path.join(distFolder, mergedStyles), bundleContent, (err) => {
-    if (err) {
-      console.error('Error writing style.css file:', err);
-      return;
-    }
-    console.log('style.css has been created in project-dist folder!');
-  });
-});
-
-// Копирование директории assetes
-const { promisify } = require('util');
-const readdir = promisify(fs.readdir);
-const mkdir = promisify(fs.mkdir);
-const copyFile = promisify(fs.copyFile);
-
-async function copyFileOrDirectory(source, destination) {
-  const sourceStats = await fs.promises.lstat(source);
-  if (sourceStats.isDirectory()) {
-    await fs.promises.mkdir(destination, { recursive: true });
-    const items = await readdir(source);
-    await Promise.all(
-      items.map(async (item) => {
-        const itemSource = path.join(source, item);
-        const itemDestination = path.join(destination, item);
-        await copyFileOrDirectory(itemSource, itemDestination);
-      }),
-    );
-  } else {
-    await copyFile(source, destination);
   }
 }
 
-async function copyDir() {
-  const sourcePath = './06-build-page/assets';
-  const destinationPath = './06-build-page/project-dist/assets';
+createProjectDistFolder();
+
+// Создание index.html в папке project-dist
+async function buildIndexFile() {
   try {
-    await mkdir(destinationPath, { recursive: true });
-    await copyFileOrDirectory(sourcePath, destinationPath);
+    const templatePath = './06-build-page/template.html';
+    const templateContent = await fs.readFile(templatePath, 'utf8');
+    let finalTemplateContent = templateContent;
+
+    const templateTags = templateContent.match(/{{\w+}}/g);
+    if (templateTags) {
+      for (const tag of templateTags) {
+        const componentName = tag.replace(/{{|}}/g, '');
+        const componentPath = path.join(
+          './06-build-page/components',
+          componentName + '.html',
+        );
+        const componentContent = await fs.readFile(componentPath, 'utf8');
+        finalTemplateContent = finalTemplateContent.replace(
+          new RegExp(tag, 'g'),
+          componentContent,
+        );
+      }
+
+      const indexPath = path.join(projectDistFolderPath, 'index.html');
+      await fs.writeFile(indexPath, finalTemplateContent, 'utf8');
+      console.log('index.html has been created in project-dist folder!');
+    }
+  } catch (err) {
+    console.error('Error while building index.html:', err);
+  }
+}
+
+buildIndexFile();
+
+// Создание файла style.css
+async function mergeStyles() {
+  try {
+    const stylesFolder = './06-build-page/styles';
+    const distFolder = './06-build-page/project-dist';
+    const mergedStyles = 'style.css';
+
+    const files = await fs.readdir(stylesFolder);
+    const styleFiles = files.filter((file) => path.extname(file) === '.css');
+
+    let bundleContent = '';
+    for (const file of styleFiles) {
+      const content = await fs.readFile(path.join(stylesFolder, file), 'utf8');
+      bundleContent += content + '\n';
+    }
+
+    await fs.writeFile(
+      path.join(distFolder, mergedStyles),
+      bundleContent,
+      'utf8',
+    );
+    console.log('style.css has been created in project-dist folder!');
+  } catch (err) {
+    console.error('Error while merging styles:', err);
+  }
+}
+
+mergeStyles();
+
+// Копирование директории assetes
+async function copyDir() {
+  try {
+    const copiedFilesPath = './06-build-page/project-dist/assets';
+    await fs.mkdir(copiedFilesPath, { recursive: true });
+    const assetsFolder = await fs.readdir('./06-build-page/assets');
+    const copiedFiles = await fs.readdir(copiedFilesPath);
+
+    await Promise.all(
+      copiedFiles.map(async (item) => {
+        await fs.unlink(`${copiedFilesPath}/${item}`);
+      }),
+    );
+
+    await Promise.all(
+      assetsFolder.map(async (item) => {
+        const sourcePath = `./06-build-page/assets/${item}`;
+        const destinationPath = `./06-build-page/project-dist/assets${item}`;
+        await fs.copyFile(sourcePath, destinationPath);
+      }),
+    );
+
     console.log('assets folder has been copied in project-dist folder!');
   } catch (error) {
-    console.error(
-      'An error occurred while copying the directory assets:',
-      error,
-    );
+    console.error('Error while copying directory:', error);
   }
 }
 
