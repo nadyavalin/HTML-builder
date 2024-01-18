@@ -80,28 +80,31 @@ mergeStyles();
 // Копирование директории assetes
 async function copyDir() {
   try {
-    const copiedFilesPath = './06-build-page/project-dist/assets';
-    await fs.mkdir(copiedFilesPath, { recursive: true });
-    const assetsFolder = await fs.readdir('./06-build-page/assets');
-    const copiedFiles = await fs.readdir(copiedFilesPath);
-
-    await Promise.all(
-      copiedFiles.map(async (item) => {
-        await fs.unlink(`${copiedFilesPath}/${item}`);
-      }),
-    );
-
-    await Promise.all(
-      assetsFolder.map(async (item) => {
-        const sourcePath = `./06-build-page/assets/${item}`;
-        const destinationPath = `./06-build-page/project-dist/assets${item}`;
-        await fs.copyFile(sourcePath, destinationPath);
-      }),
-    );
-
+    const sourceDir = './06-build-page/assets';
+    const destinationDir = './06-build-page/project-dist/assets';
+    await fs.mkdir(destinationDir, { recursive: true });
+    await recursiveCopy(sourceDir, destinationDir);
     console.log('assets folder has been copied in project-dist folder!');
   } catch (error) {
     console.error('Error while copying directory:', error);
+  }
+}
+
+async function recursiveCopy(source, target) {
+  const targetDirectory = path.resolve(target);
+  await fs.mkdir(targetDirectory, { recursive: true });
+
+  const files = await fs.readdir(source);
+  for (const file of files) {
+    const currentSource = path.join(source, file);
+    const currentTarget = path.join(targetDirectory, file);
+    const stats = await fs.stat(currentSource);
+
+    if (stats.isDirectory()) {
+      await recursiveCopy(currentSource, currentTarget);
+    } else {
+      await fs.copyFile(currentSource, currentTarget);
+    }
   }
 }
 
