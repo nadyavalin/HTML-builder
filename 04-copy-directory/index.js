@@ -21,7 +21,7 @@ async function copyDir() {
       }),
     );
 
-    console.log('Directory copied successfully.');
+    console.log('Directory has been copied successfully.');
   } catch (error) {
     console.error('Error occurred while copying directory:', error);
   }
