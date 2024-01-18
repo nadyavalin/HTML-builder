@@ -80,3 +80,40 @@ fs.readdir(stylesFolder, (err, files) => {
     console.log('style.css file has been created successfully!');
   });
 });
+
+// Копирование директории assetes
+const { promisify } = require('util');
+const readdir = promisify(fs.readdir);
+const mkdir = promisify(fs.mkdir);
+const copyFile = promisify(fs.copyFile);
+
+async function copyFileOrDirectory(source, destination) {
+  const sourceStats = await fs.promises.lstat(source);
+  if (sourceStats.isDirectory()) {
+    await fs.promises.mkdir(destination, { recursive: true });
+    const items = await readdir(source);
+    await Promise.all(
+      items.map(async (item) => {
+        const itemSource = path.join(source, item);
+        const itemDestination = path.join(destination, item);
+        await copyFileOrDirectory(itemSource, itemDestination);
+      }),
+    );
+  } else {
+    await copyFile(source, destination);
+  }
+}
+
+async function copyDir() {
+  const sourcePath = './06-build-page/assets';
+  const destinationPath = './06-build-page/project-dist/assets';
+  try {
+    await mkdir(destinationPath, { recursive: true });
+    await copyFileOrDirectory(sourcePath, destinationPath);
+    console.log('Directory copied successfully.');
+  } catch (error) {
+    console.error('An error occurred while copying the directory:', error);
+  }
+}
+
+copyDir();
