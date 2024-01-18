@@ -9,7 +9,7 @@ async function createProjectDistFolder() {
     await fs.mkdir(projectDistFolderPath, { recursive: true });
     console.log('project-dist folder has been created!');
   } catch (err) {
-    console.error('Error creating project-dist folder:', err);
+    console.error('Error while creating project-dist folder:', err);
   }
 }
 
@@ -48,7 +48,7 @@ async function buildIndexFile() {
 
 buildIndexFile();
 
-// Создание файла style.css
+// Создание файла style.css в папке project-dist
 async function mergeStyles() {
   try {
     const stylesFolder = './06-build-page/styles';
@@ -77,7 +77,7 @@ async function mergeStyles() {
 
 mergeStyles();
 
-// Копирование директории assetes
+// Копирование директории assetes в папке project-dist
 async function copyDir() {
   try {
     const sourceDir = './06-build-page/assets';
@@ -86,7 +86,7 @@ async function copyDir() {
     await recursiveCopy(sourceDir, destinationDir);
     console.log('assets folder has been copied in project-dist folder!');
   } catch (error) {
-    console.error('Error while copying directory:', error);
+    console.error('Error while copying directory assets:', error);
   }
 }
 
