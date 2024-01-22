@@ -13,7 +13,9 @@ fs.writeFile(file, '', (err) => {
     console.error('Error! File was not created!', err);
   } else {
     console.log('File created successfully!');
-    rl.setPrompt('Enter text or press "Ctrl + C" or type "exit" to quit: ');
+    rl.setPrompt(
+      'Enter your text or press "Ctrl + C" or type "exit" to quit:\n',
+    );
     rl.prompt();
   }
 });
@@ -36,7 +38,7 @@ rl.on('SIGINT', () => {
 
 rl.on('line', (input) => {
   if (input.toLowerCase() === 'exit') {
-    console.log('It was a great job!');
+    console.log('\nIt was a great job!');
     rl.close();
   } else {
     writeToFile(input);
