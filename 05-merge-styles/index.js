@@ -5,21 +5,22 @@ const stylesFolder = './05-merge-styles/styles';
 const distFolder = './05-merge-styles/project-dist';
 const mergedStyles = 'bundle.css';
 
-fs.readdir(stylesFolder)
-  .then((files) => {
+async function mergeStyles() {
+  try {
+    const files = await fs.readdir(stylesFolder);
     const styleFiles = files.filter((file) => path.extname(file) === '.css');
-    let fileReadPromises = styleFiles.map((file) => {
-      return fs.readFile(path.join(stylesFolder, file), 'utf8');
-    });
-    return Promise.all(fileReadPromises);
-  })
-  .then((fileContents) => {
-    let bundleContent = fileContents.join('\n');
-    return fs.writeFile(path.join(distFolder, mergedStyles), bundleContent);
-  })
-  .then(() => {
+    const fileContents = await Promise.all(
+      styleFiles.map((file) =>
+        fs.readFile(path.join(stylesFolder, file), 'utf8'),
+      ),
+    );
+    const bundleContent = fileContents.join('\n');
+    await fs.writeFile(path.join(distFolder, mergedStyles), bundleContent);
+
     console.log('Bundle file has been created successfully!');
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error('Error:', err);
-  });
+  }
+}
+
+mergeStyles();
